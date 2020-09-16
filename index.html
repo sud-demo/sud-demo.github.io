@@ -202,7 +202,7 @@ limitations under the License.
   function requestPermission() {
     console.log('Requesting permission...');
     // [START request_permission]
-    Notification.requestPermission().then((permission) => {
+    messaging.requestPermission().then((permission) => {
       if (permission === 'granted') {
         console.log('Notification permission granted.');
         // TODO(developer): Retrieve an Instance ID token for use with FCM.
