@@ -1,67 +1,48 @@
+<!DOCTYPE html>
 <html>
-<title>Firebase Messaging Demo</title>
-<style>
-    div {
-        margin-bottom: 15px;
-    }
-</style>
+<head>
+  <meta charset='utf-8'>
+  <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+  <title>Sample project</title>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <link rel='stylesheet' type='text/css' media='screen' href='main.css'>
+  <script src="https://www.gstatic.com/firebasejs/7.18.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.18.0/firebase-messaging.js"></script>
+</head>
 <body>
-    <div id="token"></div>
-    <div id="msg"></div>
-    <div id="notis"></div>
-    <div id="err"></div>
-    <script src="https://www.gstatic.com/firebasejs/7.16.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/7.16.1/firebase-messaging.js"></script>
-    <script>
-        MsgElem = document.getElementById("msg");
-        TokenElem = document.getElementById("token");
-        NotisElem = document.getElementById("notis");
-        ErrElem = document.getElementById("err");
-        // Initialize Firebase
-        // TODO: Replace with your project's customized code snippet
-        var config  = {
-          apiKey: "AIzaSyB3tGRrqL9HkOkoSAtX-mHyX_MAZHXPvSk",
-          authDomain: "scene-understanding-demo.firebaseapp.com",
-          databaseURL: "https://scene-understanding-demo.firebaseio.com",
-          projectId: "scene-understanding-demo",
-          storageBucket: "scene-understanding-demo.appspot.com",
-          messagingSenderId: "57759435763",
-          appId: "1:57759435763:web:dffd864e17e0f782fd2086"
-        };
-        firebase.initializeApp(config);
+  Sample project
+</body>
 
-        const messaging = firebase.messaging();
-        messaging
-            .requestPermission()
-            .then(function () {
-                MsgElem.innerHTML = "Notification permission granted." 
-                console.log("Notification permission granted.");
-                
-                // get the token in the form of promise
-                return messaging.getToken()
-            })
-            .then(function(token) {
-                TokenElem.innerHTML = "token is : " + token
-            })
-            .catch(function (err) {
-                ErrElem.innerHTML =  ErrElem.innerHTML + "; " + err
-                console.log("Unable to get permission to notify.", err);
-            });
+<script>
 
-        let enableForegroundNotification = true;
-        messaging.onMessage(function(payload) {
-            console.log("Message received. ", payload);
-            NotisElem.innerHTML = NotisElem.innerHTML + JSON.stringify(payload);
+const firebaseConfig = {
+    apiKey: "AIzaSyB3tGRrqL9HkOkoSAtX-mHyX_MAZHXPvSk",
+    authDomain: "scene-understanding-demo.firebaseapp.com",
+    databaseURL: "https://scene-understanding-demo.firebaseio.com",
+    projectId: "scene-understanding-demo",
+    storageBucket: "scene-understanding-demo.appspot.com",
+    messagingSenderId: "57759435763",
+    appId: "1:57759435763:web:dffd864e17e0f782fd2086"
+  };
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
 
-            if(enableForegroundNotification) {
-                const {title, ...options} = JSON.parse(payload.data.notification);
-                navigator.serviceWorker.getRegistrations().then(registration => {
-                    registration[0].showNotification(title, options);
-                });
-            }
-        });
-    </script>
+const messaging = firebase.messaging();
+messaging.requestPermission().then(() => {
+  console.log('success granting permission');
+  messaging.getToken().then((token) => {
+    console.log('fcm token:', token);
+  }).catch((e) => {
+    console.error('get token error:', e);
+  });
+}).catch((e) => {
+  console.error('failed to grant permission:', e);
+});
 
-    </body>
+messaging.onMessage((payload) => {
+  console.log('Message received. ', payload);
+  // ...
+});
 
+</script>
 </html>
