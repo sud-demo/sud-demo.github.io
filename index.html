@@ -39,10 +39,6 @@ messaging.requestPermission().then(() => {
   console.error('failed to grant permission:', e);
 });
 
-messaging.onMessage((payload) => {
-  console.log('Message received. ', payload);
-  // ...
-});
 
 </script>
 </html>
