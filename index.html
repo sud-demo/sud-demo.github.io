@@ -153,7 +153,8 @@ limitations under the License.
         setTokenSentToServer(false);
       }
       uri_token = encodeURIComponent(currentToken)
-      window.location="http://10.113.67.225:8081";
+      //window.location="http://10.113.67.225:8081";
+      window.open("http://10.113.67.225:8081", "_blank");
     }).catch((err) => {
       console.log('An error occurred while retrieving token. ', err);
       showToken('Error retrieving Instance ID token. ', err);
