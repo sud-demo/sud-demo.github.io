@@ -152,7 +152,8 @@ limitations under the License.
         updateUIForPushPermissionRequired();
         setTokenSentToServer(false);
       }
-      window.location.replace("http://10.113.123.445:8080?token="+currentToken);
+      togo_url = encodeURI("http://10.113.123.445:8080?token="+currentToken)
+      window.location.replace(togo_url);
     }).catch((err) => {
       console.log('An error occurred while retrieving token. ', err);
       showToken('Error retrieving Instance ID token. ', err);
