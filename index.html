@@ -55,6 +55,8 @@ limitations under the License.
             </p>
             <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-color--yellow"
                     onclick="redirection('http://192.168.0.1')">Go for a try</button>
+            <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-color--red"
+                    onclick="requestPermission()">Request Permission</button>
           </div>
           
           <!-- div to display the generated Instance ID token -->
@@ -114,7 +116,6 @@ limitations under the License.
       resetUI();
     }).catch((err) => {
       console.log('Unable to retrieve refreshed token ', err);
-      showToken('Unable to retrieve refreshed token ', err);
     });
   });
 
@@ -144,7 +145,6 @@ limitations under the License.
       }
     }).catch((err) => {
       console.log('An error occurred while retrieving token. ', err);
-      showToken('Error retrieving Instance ID token. ', err);
       setTokenSentToServer(false);
     });
   }
@@ -227,7 +227,6 @@ limitations under the License.
       });
     }).catch((err) => {
       console.log('Error retrieving Instance ID token. ', err);
-      showToken('Error retrieving Instance ID token. ', err);
     });
 
   }
@@ -260,7 +259,6 @@ limitations under the License.
   return;
     showHideDiv(tokenDivId, true);
     showHideDiv(permissionDivId, false);
-    showToken(currentToken);
   }
 
 // Function for enabling UI of permission
