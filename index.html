@@ -146,6 +146,7 @@ limitations under the License.
     }).catch((err) => {
       console.log('An error occurred while retrieving token. ', err);
       setTokenSentToServer(false);
+      showHideDiv(permissionDivId, true);
     });
   }
 
