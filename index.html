@@ -34,9 +34,6 @@ limitations under the License.
       <h4><b>Scene Understanding Demo</b></h4>
     </div>
   </header>
-
-  <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-color--red"
-                    onclick="requestPermission()">Request Permission</button>
   
   <main class="mdl-layout__content mdl-color--grey-100">
     <div class="mdl-cell mdl-cell--12-col mdl-cell--12-col-tablet mdl-grid">
@@ -138,11 +135,13 @@ limitations under the License.
         updateUIForPushEnabled(currentToken);
         showToken(currentToken);
         showHideDiv(demoDivID, true);
+        showHideDiv(permissionDivId, false);
       } else {
         console.log('No Instance ID token available. Request permission to generate one.');
         updateUIForPushPermissionRequired();
         setTokenSentToServer(false);
         showHideDiv(demoDivID, false);
+        showHideDiv(permissionDivId, true);
       }
     }).catch((err) => {
       console.log('An error occurred while retrieving token. ', err);
