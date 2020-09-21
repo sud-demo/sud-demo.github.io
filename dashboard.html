@@ -1,0 +1,273 @@
+
+<!DOCTYPE html>
+<!--
+Copyright (c) 2016 Google Inc.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<html>
+<head>
+  <meta charset=utf-8 />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scene Understanding Demo</title>
+
+  <!-- Material Design Theming -->
+  <link rel="stylesheet" href="https://code.getmdl.io/1.1.3/material.orange-indigo.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <script defer src="https://code.getmdl.io/1.1.3/material.min.js"></script>
+
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+<div class="demo-layout mdl-layout mdl-js-layout mdl-layout--fixed-header">
+
+  <!-- Header section containing title -->
+  <header class="mdl-layout__header mdl-color-text--white mdl-color--brown-700">
+    <div class="mdl-cell mdl-cell--12-col mdl-cell--12-col-tablet mdl-grid">
+      <h4><b>Scene Understanding Demo</b></h4>
+    </div>
+  </header>
+  
+  <main class="mdl-layout__content mdl-color--grey-100">
+    <div class="mdl-cell mdl-cell--12-col mdl-cell--12-col-tablet mdl-grid">
+
+      <!-- Container for the Table of content -->
+      <div class="mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col mdl-cell--12-col-tablet mdl-cell--12-col-desktop">
+        <div class="mdl-card__supporting-text mdl-color-text--black">
+
+          <!-- div to display the generated Instance ID token -->
+          <div id="demo_div" style="display: none;">
+            <h4>Advanced Photo Message</h4>
+            <img style="width:90%" src="https://fiverr-res.cloudinary.com/images/q_auto,f_auto/gigs/130099746/original/931a988da266a89f88f67dd41ea118c6a168313a/make-polaroid-from-your-pictures.jpg">
+            <br><br>
+            <p style="word-break: break-all; font-size:15px">
+            </p>
+            <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-color--yellow"
+                    onclick="redirection('http://10.113.67.225:7890')">Go To Dashboard</button>
+          </div>
+          
+          <!-- div to display the generated Instance ID token -->
+          <div id="token_div" style="display: none;">
+            <h4>Instance ID Token</h4>
+            <p id="token" style="word-break: break-all;"></p>
+            <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored"
+                    onclick="deleteToken()">Delete Token</button>
+          </div>
+          <!-- div to display the UI to allow the request for permission-->
+          <div id="permission_div" style="display: none;">
+            <h4>Needs Permission</h4>
+            <p id="token"></p>
+            <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored"
+                    onclick="requestPermission()">Request Permission</button>
+          </div>
+          <!-- div to display messages received by this app. -->
+          <div id="messages"></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- Import and configure the Firebase SDK -->
+<!-- These scripts are made available when the app is served or deployed on Firebase Hosting -->
+<!-- If you do not serve/host your project using Firebase Hosting see https://firebase.google.com/docs/web/setup -->
+<script src="https://www.gstatic.com/firebasejs/7.18.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.18.0/firebase-messaging.js"></script>
+
+<script>
+  
+  const firebaseConfig = {
+    apiKey: "AIzaSyB3tGRrqL9HkOkoSAtX-mHyX_MAZHXPvSk",
+    authDomain: "scene-understanding-demo.firebaseapp.com",
+    databaseURL: "https://scene-understanding-demo.firebaseio.com",
+    projectId: "scene-understanding-demo",
+    storageBucket: "scene-understanding-demo.appspot.com",
+    messagingSenderId: "57759435763",
+    appId: "1:57759435763:web:dffd864e17e0f782fd2086"
+  };
+ 
+  firebase.initializeApp(firebaseConfig);
+  const messaging = firebase.messaging();
+
+  const demoDivID = 'demo_div';
+  const tokenDivId = 'token_div';
+  const permissionDivId = 'permission_div';
+
+  // Callback fired if Instance ID token is updated.
+  messaging.onTokenRefresh(() => {
+    messaging.getToken().then((refreshedToken) => {
+      console.log('Token refreshed.');
+      setTokenSentToServer(false);
+      sendTokenToServer(refreshedToken);
+      resetUI();
+    }).catch((err) => {
+      console.log('Unable to retrieve refreshed token ', err);
+    });
+  });
+
+ // Callback foreground message arrived.
+  messaging.onMessage((payload) => {
+    console.log('Message received. ', payload);
+    appendMessage(payload);
+  });
+
+ // Function for reset UI
+  function resetUI() {
+    console.log('Loading UI...');
+    clearMessages();
+
+    messaging.getToken().then((currentToken) => {
+      if (currentToken) {
+        console.log('Current Token :', currentToken);
+        sendTokenToServer(currentToken);
+        updateUIForPushEnabled(currentToken);
+        showToken(currentToken);
+        showHideDiv(demoDivID, true);
+        showHideDiv(permissionDivId, false);
+      } else {
+        console.log('No Instance ID token available. Request permission to generate one.');
+        updateUIForPushPermissionRequired();
+        setTokenSentToServer(false);
+        showHideDiv(demoDivID, false);
+        showHideDiv(permissionDivId, true);
+      }
+    }).catch((err) => {
+      console.log('An error occurred while retrieving token. ', err);
+      setTokenSentToServer(false);
+      showHideDiv(permissionDivId, true);
+    });
+  }
+
+// Show token in console and UI.
+  function showToken(currentToken) {
+    const tokenElement = document.querySelector('#token');
+    tokenElement.textContent = currentToken;
+  }
+
+// Show token in console and UI.
+  function grepToken() {
+    const tokenElement = document.querySelector('#token');
+    return tokenElement.textContent;
+  }  
+
+// Function for sending token to server  
+  function sendTokenToServer(currentToken) {
+    return;
+    if (!isTokenSentToServer()) {
+      console.log('Sending token to server...');
+      // TODO(developer): Send the current token to your server.
+      setTokenSentToServer(true);
+    } else {
+      console.log('Token already sent to server so won\'t send it again ' +
+          'unless it changes');
+    }
+  }
+
+// Function for redirection
+  function redirection(target_url){
+    enToken = encodeURIComponent(grepToken());
+    window.location.href=target_url + '?token=' + enToken;
+  }
+
+// Function for existence of token sent to server
+  function isTokenSentToServer() {
+    return;
+    return window.localStorage.getItem('sentToServer') === '1';
+  }
+
+// Function for set existence of token sent to server
+  function setTokenSentToServer(sent) {
+    return;
+    window.localStorage.setItem('sentToServer', sent ? '1' : '0');
+  }
+
+// Function for toggle hide
+  function showHideDiv(divId, show) {
+    const div = document.querySelector('#' + divId);
+    if (show) {
+      div.style = 'display: visible';
+    } else {
+      div.style = 'display: none';
+    }
+  }
+
+// Function for requesting permission
+  function requestPermission() {
+    console.log('Requesting permission...');
+    messaging.requestPermission().then((permission) => {
+      if (permission === 'granted') {
+        console.log('Notification permission granted.');
+        resetUI();
+      } else {
+        console.log('Unable to get permission to notify.');
+      }
+    });
+  }
+
+// Delete token and request new token
+  function deleteToken() {
+    messaging.getToken().then((currentToken) => {
+      messaging.deleteToken(currentToken).then(() => {
+        console.log('Token deleted.');
+        setTokenSentToServer(false);
+        resetUI();
+      }).catch((err) => {
+        console.log('Unable to delete token. ', err);
+      });
+    }).catch((err) => {
+      console.log('Error retrieving Instance ID token. ', err);
+    });
+
+  }
+
+// Add a message to the messages element.
+  function appendMessage(payload) {
+    return;
+    const messagesElement = document.querySelector('#messages');
+    const dataHeaderELement = document.createElement('h5');
+    const dataElement = document.createElement('pre');
+    dataElement.style = 'overflow-x:hidden;';
+    dataHeaderELement.textContent = 'Received message:';
+    dataElement.textContent = JSON.stringify(payload, null, 2);
+    messagesElement.appendChild(dataHeaderELement);
+    messagesElement.appendChild(dataElement);
+  }
+
+// Clear the messages element of all children.
+  function clearMessages() {
+  return;
+    const messagesElement = document.querySelector('#messages');
+    while (messagesElement.hasChildNodes()) {
+      messagesElement.removeChild(messagesElement.lastChild);
+    }
+  }
+
+
+// Function for enabling UI of push
+  function updateUIForPushEnabled(currentToken) {
+  return;
+    showHideDiv(tokenDivId, true);
+    showHideDiv(permissionDivId, false);
+  }
+
+// Function for enabling UI of permission
+  function updateUIForPushPermissionRequired() {
+  return;
+    showHideDiv(tokenDivId, false);
+    showHideDiv(permissionDivId, true);
+  }
+
+  resetUI();
+  
+</script>
+</body>
+</html>
+
